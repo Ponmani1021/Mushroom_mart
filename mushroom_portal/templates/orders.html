@@ -1,0 +1,325 @@
+{% extends "base.html" %}
+{% block title %}My Orders{% endblock %}
+{% block content %}
+
+<div class="container py-5">
+
+    <div class="mb-4">
+        {% if role == 'user' %}
+            <a href="{% url 'user_dashboard' %}" class="btn btn-outline-secondary">⬅ Go Back</a>
+        {% else %}
+            <a href="{% url 'seller_dashboard' %}" class="btn btn-outline-secondary">⬅ Go Back</a>
+        {% endif %}
+    </div>
+
+    <h2 class="fw-bold text-center mb-5">📦 My Orders</h2>
+
+    <!-- ================= BUY NOW ORDERS ================= -->
+    <h4 class="fw-bold mb-4 text-primary">⚡ Buy Now Orders</h4>
+
+    {% for order in buy_now_orders %}
+    <div class="card mb-4 shadow-sm border-primary">
+        <div class="card-header bg-success text-white d-flex justify-content-between">
+            <div>
+                <strong>Order #{{ forloop.counter }}</strong><br>
+                <small>{{ order.created_at|date:"d M Y, h:i A" }}</small>
+            </div>
+            <div class="text-end">
+                <div>Total: ₹{{ order.total_amount|floatformat:2 }}</div>
+                <small>Delivery: ₹{{ order.delivery_charge|floatformat:2 }}</small>
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-bordered text-center align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Product</th>
+                            <th>Category</th>
+                            <th>Type</th>
+                            <th>Subtype</th>
+                            <th>Qty</th>
+                            <th>
+                                {% if role == 'user' %}Shop{% else %}Customer{% endif %}
+                            </th>
+                            <th>Unit Price</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>{{ order.product.name }}</td>
+                            <td>{{ order.product.category.name|default:"-" }}</td>
+                            <td>{{ order.product.get_type_display }}</td>
+                            <td>{{ order.product.subtype.name|default:"-" }}</td>
+                            <td>{{ order.quantity }}</td>
+
+                            <td>
+                                {% if role == 'seller' %}
+                                    {{ order.user.profile.fullname }}
+                                    <button class="btn btn-sm btn-outline-secondary ms-2"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#userProfileModal{{ order.user.id }}">
+                                        <i class="bi bi-person-circle"></i>
+                                    </button>
+                                {% else %}
+                                    {{ order.shop_name }}
+                                {% endif %}
+                            </td>
+
+                            <td>₹{{ order.unit_price }}</td>
+
+                            <td>
+                                {% if role == 'user' %}
+                                    <button class="btn btn-sm btn-outline-primary"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#addReviewModal{{ order.id }}">
+                                        Review
+                                    </button>
+                               {% elif role == 'seller' %}
+    {% if order.user_review %}
+        <button class="btn btn-sm btn-outline-info"
+                data-bs-toggle="modal"
+                data-bs-target="#viewReviewModal{{ order.user_review.id }}">
+            View Review
+        </button>
+    {% else %}
+        <span class="text-muted">No Review</span>
+    {% endif %}
+
+                                    
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    <!-- ================= CART ORDERS ================= -->
+    <h4 class="fw-bold mb-4 text-success">🛒 Cart Orders</h4>
+
+    {% for order in cart_orders %}
+    <div class="card mb-4 shadow-sm border-success">
+        <div class="card-header bg-success text-white d-flex justify-content-between">
+            <div>
+                <strong>Order #{{ forloop.counter }}</strong><br>
+                <small>{{ order.created_at|date:"d M Y, h:i A" }}</small>
+            </div>
+            <div class="text-end">
+                <div>Total: ₹{{ order.total_amount }}</div>
+                <small>Delivery: ₹{{ order.delivery_charge }}</small>
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-bordered text-center align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Product</th>
+                            <th>Category</th>
+                            <th>Type</th>
+                            <th>Subtype</th>
+                            <th>Qty</th>
+                            <th>
+                                {% if role == 'user' %}Shop{% else %}Customer{% endif %}
+                            </th>
+                            <th>Unit Price</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in order.items.all %}
+<tr>
+    <td>{{ item.product.name }}</td>
+    <td>{{ item.product.category.name|default:"-" }}</td>
+    <td>{{ item.product.get_type_display }}</td>
+    <td>{{ item.product.subtype.name|default:"-" }}</td>
+    <td>{{ item.quantity }}</td>
+
+    {% if forloop.first %}
+    <td rowspan="{{ order.items.count }}">
+        {% if role == 'seller' %}
+            {{ order.user.profile.fullname }}
+            <button class="btn btn-sm btn-outline-secondary ms-2"
+                    data-bs-toggle="modal"
+                    data-bs-target="#userProfileModal{{ order.user.id }}">
+                <i class="bi bi-person-circle"></i>
+            </button>
+        {% else %}
+            {{ order.items.first.product.seller.shops.first.shop_name }}
+        {% endif %}
+    </td>
+    {% endif %}
+
+    <!-- ✅ UNIT PRICE MUST BE HERE -->
+    <td>₹{{ item.unit_price }}</td>
+
+    {% if forloop.first %}
+    <td rowspan="{{ order.items.count }}">
+        {% if role == 'user' %}
+            <button class="btn btn-sm btn-outline-primary"
+                    data-bs-toggle="modal"
+                    data-bs-target="#addReviewModal{{ order.id }}">
+                Review
+            </button>
+        {% elif role == 'seller' %}
+            {% if order.user_review %}
+                <button class="btn btn-sm btn-outline-info"
+                        data-bs-toggle="modal"
+                        data-bs-target="#viewReviewModal{{ order.user_review.id }}">
+                    View Review
+                </button>
+            {% else %}
+                <span class="text-muted">No Review</span>
+            {% endif %}
+        {% endif %}
+    </td>
+    {% endif %}
+</tr>
+{% endfor %}
+
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+
+
+<!-- 1️⃣ Add Review Modal (for both Buy Now & Cart) -->
+{% for order in all_orders %}
+{% if role == 'user' %}
+<div class="modal fade" id="addReviewModal{{ order.id }}" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content shadow rounded-4">
+            <form method="post" action="{% url 'add_review' %}" onsubmit="return validateRating(this)">
+                {% csrf_token %}
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Review Order</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <input type="hidden" name="order_type" value="{{ order.order_type }}">
+                    <input type="hidden" name="order_id" value="{{ order.id }}">
+
+                    {% if order.order_type == 'buy_now' %}
+                        <h6>Product:</h6>
+                        <p>{{ order.product.name }}</p>
+                    {% else %}
+                        <h6>Products:</h6>
+                        <ul>
+                            {% for item in order.items.all %}
+                                <li>{{ item.product.name }} (Qty: {{ item.quantity }})</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+
+                        <label class="fw-bold">Rating</label>
+<select name="rating" class="form-select mb-3" required>
+    <option value="">Select Rating</option>
+    <option value="5">★★★★★</option>
+    <option value="4">★★★★</option>
+    <option value="3">★★★</option>
+    <option value="2">★★</option>
+    <option value="1">★</option>
+</select>
+
+                    </select>
+
+                    <label class="fw-bold">Review</label>
+                    <textarea name="description" class="form-control" rows="3" required placeholder="Write your review here..."></textarea>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success">Submit Review</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endfor %}
+
+<!-- 2️⃣ View Review Modal -->
+{% for order in all_orders %}
+{% if role == 'seller' %}
+  {% if order.user_review %}
+    {% with review=order.user_review %}
+
+        <div class="modal fade" id="viewReviewModal{{ review.id }}" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content rounded-4 shadow">
+                    <div class="modal-header bg-info text-white">
+                        <h5 class="modal-title">Customer Review</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <h6>{{ review.user.profile.fullname }}</h6>
+                        <small class="text-muted">{{ review.created_at|date:"d M Y, h:i A" }}</small>
+
+                        <div class="my-2">
+                            {% for i in "12345"|make_list %}
+                                {% if forloop.counter <= review.rating %}
+                                    <i class="bi bi-star-fill text-warning"></i>
+                                {% else %}
+                                    <i class="bi bi-star text-warning"></i>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+
+                        <p>{{ review.description }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endwith %}
+    {% endif %}
+{% endif %}
+{% endfor %}
+
+<!-- 3️⃣ User Profile Modal -->
+{% if role == 'seller' %}
+{% for order in all_orders %}
+<div class="modal fade" id="userProfileModal{{ order.user.id }}" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow rounded-4">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title">Customer Details</h5>
+                <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Name:</strong> {{ order.user.profile.fullname }}</p>
+                <p><strong>Contact:</strong> {{ order.user.profile.contact_number }}</p>
+                <p><strong>Address:</strong><br>{{ order.user.addresses.first.address|default:"No address" }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endif %}
+
+</div>
+
+<script>
+function validateRating(form) {
+    const rating = form.querySelector('select[name="rating"]').value;
+    if (!rating) {
+        alert("Please select a rating!");
+        return false;
+    }
+    return true;
+}
+</script>
+
+
+
+</div>
+{% endblock %}

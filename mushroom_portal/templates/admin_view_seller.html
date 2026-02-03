@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Seller Details{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-card {
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .profile-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 25px rgba(0,0,0,0.15);
+    }
+    .product-card img {
+        height: 180px;
+        object-fit: cover;
+    }
+    .badge-category {
+        background-color: #6c757d;
+        font-size: 0.75rem;
+        margin-right: 4px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+    <h2 class="text-center mb-5">Seller Details</h2>
+
+    <div class="row g-4">
+
+        <!-- Seller Profile Card -->
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 h-100 profile-card">
+                <div class="card-header bg-success text-white fw-bold">
+                    <i class="bi bi-person-circle"></i> Seller Profile
+                </div>
+                <div class="card-body">
+                    <p><strong>Name:</strong> {{ seller.fullname|default:"Not provided" }}</p>
+                    <p><strong>Email:</strong> {{ seller.email|default:"Not provided" }}</p>
+                    <p><strong>Contact:</strong> {{ seller.contact_number|default:"Not provided" }}</p>
+                    <p><strong>Shop Name:</strong> {{ shop.shop_name|default:"Not provided" }}</p>
+                    <p><strong>Address:</strong> {% if shop.shop_address %}
+                    {{ shop.shop_address }}
+                        {% else %}
+                            <span class="text-muted">Not provided</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Products Section -->
+    <div class="card shadow-sm border-0 mt-5">
+        <div class="card-header bg-dark text-white fw-bold">
+            <i class="bi bi-box-seam"></i> Seller Products
+        </div>
+        <div class="card-body">
+            {% if products %}
+            <div class="row g-4">
+                {% for product in products %}
+                <div class="col-md-4">
+                    <div class="card shadow-sm h-100 product-card">
+                        {% if product.image %}
+                        <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}">
+                        {% else %}
+                        <img src="https://via.placeholder.com/300x180?text=No+Image" class="card-img-top" alt="No Image">
+                        {% endif %}
+                        <div class="card-body text-center">
+                            <h6 class="fw-bold">{{ product.name }}</h6>
+                            <p class="text-muted small">
+                                {{ product.description|truncatewords:12 }}
+                            </p>
+                            <p class="text-success fw-bold mb-1">₹ {{ product.price }}</p>
+                            <p class="mb-0">
+                                {% if product.category %}
+                                    <span class="badge badge-category">{{ product.category.name }}</span>
+                                {% else %}
+                                    <span class="badge badge-category bg-secondary">-</span>
+                                {% endif %}
+                                {% if product.subtype %}
+                                    <span class="badge badge-category bg-info text-dark">{{ product.subtype.name }}</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+                <p class="text-center text-muted">No products from this seller.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="text-center mt-5">
+        <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary btn-lg">
+            <i class="bi bi-arrow-left-circle"></i> Back to Dashboard
+        </a>
+    </div>
+
+</div>
+{% endblock %}

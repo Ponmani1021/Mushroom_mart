@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}All Products{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">All Seller Products</h2>
+        <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary">
+            ⬅ Back to Dashboard
+        </a>
+    </div>
+
+    {% if products %}
+    <div class="row g-4">
+        {% for product in products %}
+        <div class="col-md-4 col-lg-3">
+            <div class="card h-100 shadow-sm border-0">
+
+                {% if product.image %}
+                <img src="{{ product.image.url }}"
+                     class="card-img-top"
+                     style="height:180px; object-fit:cover;">
+                {% endif %}
+
+                <div class="card-body">
+                    <h6 class="fw-bold mb-1">{{ product.name }}</h6>
+
+                    <p class="small text-muted mb-1">
+                        {{ product.description|truncatewords:12 }}
+                    </p>
+
+                    <p class="fw-bold text-success mb-1">
+                        ₹ {{ product.price }}
+                    </p>
+
+                    <hr class="my-2">
+
+                    <p class="mb-1 small">
+                        <strong>Category:</strong>
+                        {{ product.category.name|default:"-" }}
+                    </p>
+
+                    <p class="mb-1 small">
+                        <strong>Type:</strong>
+                        {{ product.type|default:"-" }}
+                    </p>
+
+                    <p class="mb-1 small">
+                        <strong>Subtype:</strong>
+                        {{ product.subtype.name|default:"-" }}
+                    </p>
+
+                    <hr class="my-2">
+
+                    <p class="mb-1 small">
+                        <strong>Seller:</strong>
+                        {{ product.seller.fullname }}
+                    </p>
+
+                    <p class="mb-1 small">
+                        <strong>Shop:</strong>
+                        {{ product.seller.shops.first.shop_name|default:"-" }}
+                    </p>
+
+                    <p class="mb-1 small text-primary">
+                        <strong>Orders:</strong> {{ product.order_count }}
+                    </p>
+
+                    <p class="mb-0 small text-muted">
+                        Added on {{ product.created_at|date:"d M Y, h:i A" }}
+                    </p>
+                </div>
+
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+        <p class="text-center text-muted mt-5">
+            No products available.
+        </p>
+    {% endif %}
+
+</div>
+{% endblock %}

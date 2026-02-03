@@ -1,0 +1,299 @@
+{% extends "base.html" %}
+
+{% block title %}Seller Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+        cursor: pointer;
+    }
+    .dashboard-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+    }
+    .dashboard-icon {
+        font-size: 3rem;
+        color: #4CAF50;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="container py-5">
+
+    <!-- Welcome Message -->
+    {% if messages %}
+    <div class="mb-4">
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show text-center" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <h2 class="text-center fw-bold mb-5">Seller Dashboard</h2>
+
+    <div class="row g-4 justify-content-center">
+
+
+         <!-- Profile Card -->
+        <div class="col-md-4">
+            <div class="card dashboard-card shadow-lg border-0 text-center h-100">
+                <div class="card-body p-4">
+                    <div class="dashboard-icon mb-3">👤</div>
+                    <h4 class="fw-bold">Profile</h4>
+                    <p class="text-muted">Update your seller details and contact information.</p>
+                    <a href="{% url 'seller_profile' %}" class="btn btn-warning px-4 mt-2 text-white">Edit Profile</a>
+                </div>
+            </div>
+        </div>
+
+            <!-- Add Product Card -->
+    <div class="col-md-4">
+        <div class="card dashboard-card shadow-lg border-0 text-center h-100">
+            <div class="card-body p-4">
+                <div class="dashboard-icon mb-3">➕</div>
+                <h4 class="fw-bold">Add Product</h4>
+                <p class="text-muted">Create and list a new mushroom product for sale.</p>
+                <button class="btn btn-success"
+        data-bs-toggle="modal"
+        data-bs-target="#addProductModal">
+    ➕ Add Product
+</button>
+
+            </div>
+        </div>
+    </div>
+
+        <!-- My Products Card -->
+        <div class="col-md-4">
+            <div class="card dashboard-card shadow-lg border-0 text-center h-100">
+                <div class="card-body p-4">
+                    <div class="dashboard-icon mb-3">📦</div>
+                    <h4 class="fw-bold">My Products</h4>
+                    <p class="text-muted">Add, update, or remove your mushroom products.</p>
+                    <a href="{% url 'products_list' %}" class="btn btn-success px-4 mt-2">
+                        Manage Products
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Orders Card -->
+        <div class="col-md-4">
+            <div class="card dashboard-card shadow-lg border-0 text-center h-100">
+                <div class="card-body p-4">
+                    <div class="dashboard-icon mb-3">🛒</div>
+                    <h4 class="fw-bold">Orders</h4>
+                    <p class="text-muted">View and process your customer orders efficiently.</p>
+                    <a href="{% url 'orders_page' %}" class="btn btn-primary px-4 mt-2">View Orders</a>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Count Section -->
+    <div class="row g-4 mt-5 justify-content-center">
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 text-center py-4">
+                <h5>Total Products</h5>
+                <h3 class="fw-bold">{{ product_count }}</h3>
+            </div>
+
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 text-center py-4">
+                <h5>Total Orders</h5>
+                <h3 class="fw-bold">{{ total_orders }}</h3>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+<!-- JSON data for JS -->
+{{ categories_json|json_script:"categories-data" }}
+
+<!-- Add Product Modal -->
+<div class="modal fade" id="addProductModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form method="POST" action="{% url 'add_product' %}" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="modal-content">
+
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title">Add Product</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+
+          <!-- Product Name -->
+          <div class="mb-3">
+            <label>Product Name</label>
+            <input type="text" name="name" class="form-control" required>
+          </div>
+
+          <!-- Category -->
+          <div class="mb-3">
+            <label>Category</label>
+            <select class="form-select" name="category" id="categorySelect" required>
+                <option value="">Select Category</option>
+                {% for cat in categories %}
+                <option value="{{ cat.id }}">{{ cat.name }}</option>
+                {% endfor %}
+            </select>
+          </div>
+
+          <!-- Subtype (hidden by default) -->
+          <div class="mb-3" id="subtypeDiv" style="display:none;">
+            <label>Subtype</label>
+            <select class="form-select" name="subtype" id="subtypeSelect">
+                <option value="">Select Subtype</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label>Product Type</label>
+            <select name="type" class="form-select" required>
+                <option value="fresh">Fresh</option>
+                <option value="dried">Dried</option>
+            </select>
+        </div>
+
+
+          <!-- Other Description (hidden by default) -->
+          <div class="mb-3" id="otherDescDiv" style="display:none;">
+            <label>Other Description</label>
+            <textarea class="form-control" name="other_description" rows="3"></textarea>
+          </div>
+
+          <!-- Description -->
+          <div class="mb-3">
+            <label>Description</label>
+            <textarea name="description" class="form-control" rows="3" required></textarea>
+          </div>
+
+          <!-- Price -->
+          <div class="mb-3">
+            <label>Price <small>( per 250g )</small></label>
+            <input type="number" step="0.01" name="price" class="form-control" required>
+          </div>
+
+          <!-- Image -->
+          <div class="mb-3">
+            <label>Product Image</label>
+            <input type="file" name="image" class="form-control">
+          </div>
+
+        </div>
+
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success">Save Product</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<script>
+// ---------- Load categories + subtypes JSON ----------
+const categoriesData = JSON.parse(document.getElementById('categories-data').textContent || '[]');
+
+// Map: category id → subtypes array
+const categorySubtypesMap = {};
+categoriesData.forEach(cat => {
+    categorySubtypesMap[cat.id] = cat.subtypes || [];
+});
+
+// Get "Others" category id if exists
+const othersCategory = categoriesData.find(cat => cat.name.toLowerCase() === 'others');
+const othersCategoryId = othersCategory ? othersCategory.id : null;
+
+// ---------- Add Product Modal Elements ----------
+const addCategorySelect = document.getElementById('categorySelect');
+const addSubtypeDiv = document.getElementById('subtypeDiv');
+const addSubtypeSelect = document.getElementById('subtypeSelect');
+const addOtherDescDiv = document.getElementById('otherDescDiv');
+const addProductTypeSelect = document.getElementById('productTypeSelect'); // NEW
+
+// ---------- Helper: Update subtype dropdown ----------
+function updateSubtype(catId) {
+    const subtypes = categorySubtypesMap[catId] || [];
+    addSubtypeSelect.innerHTML = '<option value="">Select Subtype</option>';
+
+    if (subtypes.length > 0) {
+        subtypes.forEach(st => {
+            const option = document.createElement('option');
+            option.value = st.id;
+            option.textContent = st.name;
+            addSubtypeSelect.appendChild(option);
+        });
+        addSubtypeDiv.style.display = 'block';
+        addOtherDescDiv.style.display = 'none';
+    } else if (catId == othersCategoryId) {
+        addSubtypeDiv.style.display = 'none';
+        addOtherDescDiv.style.display = 'block';
+    } else {
+        addSubtypeDiv.style.display = 'none';
+        addOtherDescDiv.style.display = 'none';
+    }
+}
+
+// ---------- Listen to category change ----------
+if (addCategorySelect) {
+    addCategorySelect.addEventListener('change', () => {
+        const catId = addCategorySelect.value;
+        if (!catId) {
+            addSubtypeDiv.style.display = 'none';
+            addOtherDescDiv.style.display = 'none';
+            return;
+        }
+        updateSubtype(catId);
+    });
+}
+
+// ---------- Optional: reset modal on close ----------
+const addProductModal = document.getElementById('addProductModal');
+if (addProductModal) {
+    addProductModal.addEventListener('hidden.bs.modal', () => {
+        addCategorySelect.value = '';
+        addSubtypeSelect.innerHTML = '<option value="">Select Subtype</option>';
+        addSubtypeDiv.style.display = 'none';
+        addOtherDescDiv.style.display = 'none';
+
+        if (addProductTypeSelect) addProductTypeSelect.value = ''; // reset product type
+        addProductModal.querySelector('form').reset();
+    });
+}
+
+
+document.addEventListener("DOMContentLoaded", function () {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("open_add_product") === "1") {
+        var addProductModal = new bootstrap.Modal(
+            document.getElementById('addProductModal')
+        );
+        addProductModal.show();
+    }
+});
+
+function openReview(orderType, orderId, productId) {
+    document.getElementById('reviewOrderType').value = orderType;
+    document.getElementById('reviewOrderId').value = orderId || '';   // can be empty for Buy Now
+    document.getElementById('reviewProductId').value = productId;     // must not be empty
+}
+</script>
+
+
+{% endblock %}

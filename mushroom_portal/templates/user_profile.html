@@ -1,0 +1,201 @@
+{% extends 'base.html' %}
+
+{% block title %}My Profile{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ===== Profile Avatar ===== */
+.profile-avatar {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
+    display: inline-block;
+    border: 4px solid #e9ecef;
+}
+
+.profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-fallback {
+    width: 100%;
+    height: 100%;
+    background: #198754;
+    color: #fff;
+    font-size: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.avatar-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    opacity: 0;
+    transition: 0.3s ease;
+}
+
+.profile-avatar:hover .avatar-overlay {
+    opacity: 1;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="container py-5">
+
+    <!-- ================= PROFILE CARD ================= -->
+    <div class="card shadow border-0 mb-4">
+        <div class="card-body d-flex align-items-center flex-wrap gap-4">
+
+            <!-- Profile Image Upload -->
+            <form method="post"
+                  action="{% url 'upload_profile_image' %}"
+                  enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <label for="profileImageInput" class="profile-avatar">
+
+                    {% if profile.profile_image %}
+                        <img src="{{ profile.profile_image.url }}" alt="Profile Image">
+                    {% else %}
+                        <div class="avatar-fallback">
+                            {{ profile.fullname|slice:":1"|upper }}
+                        </div>
+                    {% endif %}
+
+                    <span class="avatar-overlay">
+                        <i class="bi bi-camera-fill"></i>
+                    </span>
+                </label>
+
+                <!-- Hidden File Input -->
+                <input type="file"
+                       id="profileImageInput"
+                       name="profile_image"
+                       accept="image/*"
+                       hidden
+                       onchange="this.form.submit()">
+            </form>
+
+            <!-- Profile Info -->
+            <div>
+                <h3 class="fw-bold mb-1">{{ profile.fullname }}</h3>
+                <p class="mb-1 text-muted">
+                    <i class="bi bi-envelope"></i> {{ profile.email }}
+                </p>
+                <p class="mb-0 text-muted">
+                    <i class="bi bi-telephone"></i> {{ profile.contact_number }}
+                </p>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ================= ADD DETAILS ================= -->
+    <button class="btn btn-success mb-3"
+            data-bs-toggle="modal"
+            data-bs-target="#addAddressModal">
+        <i class="bi bi-plus-circle"></i> Add / Update Address
+    </button>
+
+    <!-- ================= ADDRESS LIST ================= -->
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <h5 class="fw-bold mb-3">📍 My Address</h5>
+
+            {% for addr in addresses %}
+                <div class="border rounded p-3 mb-2 d-flex justify-content-between align-items-center">
+                    <div>{{ addr.address }}</div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-primary"
+                                data-bs-toggle="modal"
+                                data-bs-target="#editModal{{ addr.id }}">
+                            Edit
+                        </button>
+
+                        <a href="{% url 'delete_address' addr.id %}"
+                           class="btn btn-sm btn-outline-danger"
+                           onclick="return confirm('Delete this address?')">
+                            Delete
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Edit Modal -->
+                <div class="modal fade" id="editModal{{ addr.id }}">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <form method="post" action="{% url 'edit_address' addr.id %}">
+                                {% csrf_token %}
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Edit Address</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <textarea name="address"
+                                              class="form-control"
+                                              rows="3"
+                                              required>{{ addr.address }}</textarea>
+                                </div>
+                                <div class="modal-footer">
+                                    <button class="btn btn-primary w-100">Update</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <p class="text-muted fst-italic">No address added yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <a href="{% url 'user_dashboard' %}" class="btn btn-outline-secondary mt-4">
+        ⬅ Go Back
+    </a>
+
+</div>
+
+<!-- ================= ADD ADDRESS MODAL ================= -->
+<div class="modal fade" id="addAddressModal">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form method="post" action="{% url 'add_address' %}">
+                {% csrf_token %}
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">Add / Replace Address</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <textarea name="address"
+                              class="form-control"
+                              rows="3"
+                              placeholder="Enter full address"
+                              required></textarea>
+                    <small class="text-muted">
+                        Existing address (if any) will be replaced.
+                    </small>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-success w-100">Save Address</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

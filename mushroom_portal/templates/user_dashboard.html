@@ -1,0 +1,324 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Browse Products{% endblock %}
+
+{% block content %}
+
+<div class="container py-5">
+
+    <div class="text-end mb-3">
+    <a href="{% url 'orders_page' %}" class="btn btn-outline-dark">
+        📦 My Orders
+    </a>
+    <a href="{% url 'user_profile' %}" class="btn btn-outline-secondary">
+        Profile
+    </a>
+    <a href="{% url 'cart' %}" class="btn btn-outline-success">
+        Cart ({{ cart_count }})
+    </a>
+
+</div>
+
+
+    <section class="bg-dark text-white p-5 mb-4 rounded-3">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-7">
+                <h1 class="display-5 fw-bold">Discover Amazing Products</h1>
+                <p class="lead">
+                    Browse products from all sellers, compare prices, and buy instantly.
+                </p>
+                <a href="#all-products" class="btn btn-warning btn-lg m-2">
+                    Shop Now
+                </a>
+                <a href="{% url 'orders_page' %}" class="btn btn-light btn-lg ms-2 m-2">
+                    📦 My Orders
+                </a>
+
+            </div>
+            <div class="col-md-5 text-center">
+                <img src="{% static 'images/hero-shopping.png' %}"
+                     alt="Shopping"
+                     class="img-fluid">
+            </div>
+        </div>
+    </div>
+</section>
+
+
+    <h2 class="text-center mb-5 fw-bold">Explore Fresh & Dried Mushrooms</h2>
+
+    <div class="row g-4">
+
+{% for item in product_data %}
+    {% with product=item.product shop_name=item.shop_name %}
+
+    <div class="col-md-4 col-lg-3">
+        <div class="card h-100 shadow-sm border-0 product-card">
+
+            {% if product.image %}
+                <img src="{{ product.image.url }}"
+                     class="card-img-top"
+                     style="height:200px; object-fit:cover;">
+            {% else %}
+                <div class="bg-light d-flex align-items-center justify-content-center"
+                     style="height:200px;">
+                    <span class="text-muted">No Image</span>
+                </div>
+            {% endif %}
+
+            <div class="card-body d-flex flex-column">
+
+                <h5 class="fw-bold mb-1">{{ product.name }}</h5>
+
+                <!-- correct shop name -->
+                <small class="text-muted mb-2">
+                    🏪 {{ shop_name }}
+                </small>
+
+                <div class="mb-1">
+                    <span class="badge bg-secondary">
+                        {{ product.category.name }}
+                    </span>
+
+                    {% if product.subtype %}
+                        <span class="badge bg-light text-dark border">
+                            {{ product.subtype.name }}
+                        </span>
+                    {% endif %}
+                </div>
+
+                <div class="mb-2">
+                    <span class="badge bg-success text-uppercase">
+                        {{ product.type }}
+                    </span>
+                </div>
+
+                <h5 class="text-primary fw-bold mt-auto">
+                    ₹ {{ product.price }}
+                </h5>
+
+                <div class="d-grid gap-2 mt-3">
+                    <a href="{% url 'add_to_cart' product.id %}" class="btn btn-success btn-sm w-100">
+                        Add to Cart
+                    </a>
+
+
+                    <button class="btn btn-primary btn-sm"
+                        data-bs-toggle="modal"
+                        data-bs-target="#buyNowModal"
+                        onclick="openBuyNow(
+                            '{{ product.id }}',
+                            '{{ product.name }}',
+                            '{{ product.category.name }}',
+                            '{{ product.subtype.name|default:'' }}',
+                            '{{ product.type }}',
+                            '{{ product.price }}',
+                            '{{ shop_name }}'
+                        )">
+                        ⚡ Buy Now
+                    </button>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    {% endwith %}
+
+{% empty %}
+    <div class="col-12 text-center text-muted">
+        No products available.
+    </div>
+{% endfor %}
+
+</div>
+
+</div>
+
+<!-- Buy Now Modal -->
+<div class="modal fade" id="buyNowModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+
+      <!-- Header with Close -->
+      <div class="bg-success text-white p-3 d-flex justify-content-between align-items-center">
+        <h5 class="modal-title mb-0">🛍️ Quick Order</h5>
+        <button type="button" class="btn-close btn-close-white"
+                data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body p-4">
+
+        <!-- Product Summary -->
+        <div class="bg-light rounded-3 p-3 mb-3">
+
+          <!-- Name -->
+          <h5 id="modalProductName" class="fw-bold mb-2"></h5>
+
+          <!-- Shop -->
+          <div class="text-muted mb-2">
+            🏪 <span id="modalShopName"></span>
+        </div>
+
+
+          <!-- Category & Subtype -->
+          <div class="mb-2">
+            <span class="badge bg-secondary" id="modalCategory"></span>
+            <span class="badge bg-dark" id="modalSubtype"></span>
+          </div>
+
+          <!-- Product Type -->
+          <div class="mb-2">
+            <span class="badge bg-success text-uppercase" id="modalType"></span>
+          </div>
+
+          <!-- Unit Price -->
+          <h4 class="text-primary fw-bold mb-0">
+            ₹ <span id="modalPrice"></span>
+          </h4>
+        </div>
+
+        <!-- Quantity -->
+        <label class="fw-semibold mb-2">Quantity</label>
+        <div class="d-flex justify-content-center mb-3">
+          <div class="input-group" style="width:160px;">
+            <button class="btn btn-outline-secondary" id="qtyMinus">−</button>
+            <input type="text" id="quantity"
+                   class="form-control text-center fw-bold"
+                   value="1" readonly>
+            <button class="btn btn-outline-secondary" id="qtyPlus">+</button>
+          </div>
+        </div>
+
+        <!-- Price Details -->
+        <div class="bg-white border rounded-3 p-3">
+          <div class="d-flex justify-content-between mb-2">
+            <span>Subtotal</span>
+            <span>₹ <span id="subTotal"></span></span>
+          </div>
+
+          <div class="d-flex justify-content-between mb-2">
+            <span>Delivery</span>
+            <span>₹ 35</span>
+          </div>
+
+          <hr>
+
+          <div class="d-flex justify-content-between fw-bold fs-5 text-success">
+            <span>Total</span>
+            <span>₹ <span id="totalAmount"></span></span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer -->
+      <div class="p-3 bg-light">
+       <form method="post" action="{% url 'create_buy_now_order' %}">
+    {% csrf_token %}
+    <input type="hidden" name="product_id" id="modalProductId">
+    <input type="hidden" name="quantity" id="modalQtyInput">
+
+    <button type="submit" class="btn btn-success w-100 py-2 fw-bold rounded-3">
+        ✅ Confirm Order
+    </button>
+</form>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<script>
+let price = 0;
+const delivery = 35;
+
+function openBuyNow(name, category, subtype, type, unitPrice, shop) {
+    price = parseFloat(unitPrice);
+
+    document.getElementById('modalProductName').innerText = name;
+    document.getElementById('modalCategory').innerText = category;
+    document.getElementById('modalSubtype').innerText = subtype || '—';
+    document.getElementById('modalType').innerText = type;
+    document.getElementById('modalShopName').innerText = shop;
+    document.getElementById('modalPrice').innerText = price.toFixed(2);
+
+    document.getElementById('quantity').value = 1;
+    updateTotal();
+}
+
+function updateTotal() {
+    const qty = parseInt(document.getElementById('quantity').value);
+    const subtotal = qty * price;
+    const total = subtotal + delivery;
+
+    document.getElementById('subTotal').innerText = subtotal.toFixed(2);
+    document.getElementById('totalAmount').innerText = total.toFixed(2);
+}
+
+document.getElementById('qtyPlus').onclick = function () {
+    let q = document.getElementById('quantity');
+    q.value = parseInt(q.value) + 1;
+    updateTotal();
+};
+
+document.getElementById('qtyMinus').onclick = function () {
+    let q = document.getElementById('quantity');
+    if (parseInt(q.value) > 1) {
+        q.value = parseInt(q.value) - 1;
+        updateTotal();
+    }
+};
+
+
+function openBuyNow(id, name, category, subtype, type, unitPrice, shop) {
+    price = parseFloat(unitPrice);
+
+    document.getElementById('modalProductId').value = id;
+    document.getElementById('modalQtyInput').value = 1;
+
+    document.getElementById('modalProductName').innerText = name;
+    document.getElementById('modalCategory').innerText = category;
+    document.getElementById('modalSubtype').innerText = subtype || '—';
+    document.getElementById('modalType').innerText = type;
+    document.getElementById('modalShopName').innerText = shop;
+    document.getElementById('modalPrice').innerText = price.toFixed(2);
+
+    document.getElementById('quantity').value = 1;
+    updateTotal();
+}
+
+function updateTotal() {
+    const qty = parseInt(document.getElementById('quantity').value);
+    document.getElementById('modalQtyInput').value = qty;
+
+    const subtotal = qty * price;
+    const total = subtotal + delivery;
+
+    document.getElementById('subTotal').innerText = subtotal.toFixed(2);
+    document.getElementById('totalAmount').innerText = total.toFixed(2);
+}
+
+</script>
+
+
+<style>
+.product-card {
+    transition: transform .2s ease, box-shadow .2s ease;
+    border-radius: 12px;
+    overflow: hidden;
+}
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+}
+.card-img-top {
+    border-bottom: 1px solid #eee;
+}
+</style>
+
+{% endblock %}

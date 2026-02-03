@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+
+<!-- Message -->
+{% if messages %}
+<div class="container mt-3">
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show text-center" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+
+<div class="container py-5">
+
+    <h2 class="text-center mb-4 fw-bold">Admin Dashboard</h2>
+
+    <div class="row mb-5 g-4 justify-content-center">
+
+        <!-- View Sellers Card -->
+        <div class="col-md-5">
+            <div class="card shadow-lg border-0 h-100 text-center">
+                <div class="card-body p-4">
+                    <div class="display-5 mb-3">🧑‍🌾</div>
+                    <h4 class="fw-bold">Manage Sellers</h4>
+                    <p class="text-muted">
+                        View and manage all registered mushroom sellers.
+                    </p>
+                    <button class="btn btn-success px-4"
+                            data-bs-toggle="modal"
+                            data-bs-target="#sellerModal">
+                        View Sellers
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- View Users Card -->
+        <div class="col-md-5">
+            <div class="card shadow-lg border-0 h-100 text-center">
+                <div class="card-body p-4">
+                    <div class="display-5 mb-3">👥</div>
+                    <h4 class="fw-bold">View Users</h4>
+                    <p class="text-muted">
+                        See all registered customers on the platform.
+                    </p>
+                    <button class="btn btn-primary px-4"
+                            data-bs-toggle="modal"
+                            data-bs-target="#userModal">
+                        View Users
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- View Products Card -->
+        <div class="col-md-5">
+            <div class="card shadow-lg border-0 h-100 text-center">
+                <div class="card-body p-4">
+                    <div class="display-5 mb-3">📦</div>
+                    <h4 class="fw-bold">View Products</h4>
+                    <p class="text-muted">
+                        Browse all products added by sellers in one place.
+                    </p>
+                    <a href="{% url 'admin_view_products' %}" class="btn btn-dark px-4">
+                        View Products
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- View Orders Card -->
+        <div class="col-md-5">
+            <div class="card shadow-lg border-0 h-100 text-center">
+                <div class="card-body p-4">
+                    <div class="display-5 mb-3">🧾</div>
+                    <h4 class="fw-bold">View Orders</h4>
+                    <p class="text-muted">
+                        View all customer orders placed on the platform.
+                    </p>
+                    <a href="{% url 'admin_view_orders' %}" class="btn btn-warning px-4">
+                        View Orders
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        
+
+    </div>
+
+
+        <!-- STATS CARDS -->
+    <div class="row g-4 mb-5 mt-5">
+
+        <!-- Total Sellers -->
+        <div class="col-md-3 col-sm-6">
+            <div class="card border-0 shadow-sm text-center p-3 h-100">
+                <div class="fs-2 text-success mb-1">
+                    <i class="bi bi-person-badge"></i>
+                </div>
+                <small class="text-muted">Total Sellers</small>
+                <h4 class="fw-bold mb-0">{{ total_sellers }}</h4>
+            </div>
+        </div>
+
+        <!-- Total Users -->
+        <div class="col-md-3 col-sm-6">
+            <div class="card border-0 shadow-sm text-center p-3 h-100">
+                <div class="fs-2 text-primary mb-1">
+                    <i class="bi bi-people"></i>
+                </div>
+                <small class="text-muted">Total Users</small>
+                <h4 class="fw-bold mb-0">{{ total_users }}</h4>
+            </div>
+        </div>
+
+        <!-- Total Products -->
+        <div class="col-md-3 col-sm-6">
+            <div class="card border-0 shadow-sm text-center p-3 h-100">
+                <div class="fs-2 text-warning mb-1">
+                    <i class="bi bi-box-seam"></i>
+                </div>
+                <small class="text-muted">Total Products</small>
+                <h4 class="fw-bold mb-0">{{ total_products }}</h4>
+            </div>
+        </div>
+
+        <!-- Total Orders -->
+        <div class="col-md-3 col-sm-6">
+            <div class="card border-0 shadow-sm text-center p-3 h-100">
+                <div class="fs-2 text-danger mb-1">
+                    <i class="bi bi-cart-check"></i>
+                </div>
+                <small class="text-muted">Total Orders</small>
+                <h4 class="fw-bold mb-0">{{ total_orders }}</h4>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- Sellers Modal -->
+<div class="modal fade" id="sellerModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title">All Sellers</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>Name</th>
+                    <th>Contact Number</th>
+                    <th width="120">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for seller in sellers %}
+                <tr>
+                    <td> {{ seller.shops.first.shop_name|default:"Shop not created" }}</td>
+                    <td>{{ seller.contact_number }}</td>
+                    <td>
+                        <a href="{% url 'admin_view_seller' seller.id %}"
+                        class="btn btn-sm btn-info">
+                            View
+                        </a>
+                        <!-- you will create this URL later -->
+                        <a href="{% url 'delete_seller' seller.id %}"
+                        class="btn btn-sm btn-danger"
+                        onclick="return confirm('Are you sure you want to delete this seller?')">
+                            Delete
+                        </a>
+
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" class="text-center text-muted">
+                        No sellers available.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- Users Modal -->
+<div class="modal fade" id="userModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">All Users</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>Name</th>
+                    <th>Contact Number</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>{{ user.fullname }}</td>
+                    <td>{{ user.contact_number }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="2" class="text-center text-muted">
+                        No users available.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+{% endblock %}
