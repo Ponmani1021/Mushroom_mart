@@ -79,7 +79,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'newmushdb',
         'USER': 'root',
-        'PASSWORD': '',
+        'PASSWORD': 'ponmani123',
         'HOST':'localhost',
         'PORT':'3307',
         'OPTIONS': {
